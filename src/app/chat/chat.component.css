@@ -159,7 +159,8 @@
 }
 
 .message .timestamp {
-  display: block;
+  display: flex;
+  gap: 5px;
   font-size: 0.7em;
   margin-top: 5px;
   color: #888;

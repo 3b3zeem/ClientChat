@@ -8,26 +8,26 @@
       </div>
     </div>
 
-    <div class="chat-body" #chatBody>
+    <div #scrollContainer class="chat-body">
       <div *ngIf="isLoading" class="loading">Connecting to support...</div>
       <div *ngIf="!isLoading" class="messages">
         <div
           *ngFor="let msg of messages"
           class="message-container"
           [ngClass]="{
-            'right': isMyMessage(msg),
-            'left': !isMyMessage(msg)
+            right: isMyMessage(msg),
+            left: !isMyMessage(msg)
           }"
         >
           <div class="message">
             <span class="message-text">{{ msg.content }}</span>
-            <span class="timestamp" *ngIf="msg.createdAt">{{
-              msg.createdAt | date : "shortTime"
-            }}</span>
+            <div class="timestamp" *ngIf="msg.createdAt">
+              <div>{{ msg.createdAt | date: "h:mm a" }}</div>
+              <div>{{ msg.createdAt | date: "M/d/yy" }}</div>
+            </div>
           </div>
         </div>
       </div>
-
       <div *ngIf="isTyping" class="typing">Typing...</div>
     </div>
 

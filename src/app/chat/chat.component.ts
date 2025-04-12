@@ -4,7 +4,6 @@ import {
   OnDestroy,
   ViewChild,
   ElementRef,
-  AfterViewChecked,
   NgZone,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
@@ -39,7 +38,7 @@ interface Message {
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.css'],
 })
-export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
+export class ChatComponent implements OnInit, OnDestroy {
   messages: Message[] = [];
   message: string = '';
   agent: any = null;
@@ -48,7 +47,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   userId: string | null = null;
   private subscription = new Subscription();
 
-  @ViewChild('chatBody') chatBody!: ElementRef;
+  @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
 
   faSend = faPaperPlane;
   faUser = faUserCircle;
@@ -78,17 +77,20 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
       this.chatService.getMessages().subscribe((messages) => {
         this.ngZone.run(() => {
           console.log('Messages received in component:', messages);
+          const previousMessageCount = this.messages.length;
           this.messages = messages.map((msg: any) => ({
             id: msg._id || msg.id,
-          chatId: msg.chatId,
-          senderId: msg.senderId?._id || msg.senderId || null,
-          receiverId: msg.receiverId?._id || msg.receiverId || null,
-          content: msg.content,
-          status: msg.status,
-          createdAt: msg.createdAt
-            ? new Date(msg.createdAt)
-            : new Date(),
+            chatId: msg.chatId,
+            senderId: msg.senderId?._id || msg.senderId || null,
+            receiverId: msg.receiverId?._id || msg.receiverId || null,
+            content: msg.content,
+            status: msg.status,
+            createdAt: msg.createdAt ? new Date(msg.createdAt) : new Date(),
           }));
+
+          if (this.messages.length > previousMessageCount) {
+            setTimeout(() => this.scrollToBottom(true), 0);
+          }
         });
       })
     );
@@ -97,6 +99,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
       this.chatService.getIsTyping().subscribe((typing) => {
         this.ngZone.run(() => {
           this.isTyping = typing;
+          setTimeout(() => this.scrollToBottom(), 0);
         });
       })
     );
@@ -109,10 +112,13 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
         });
       })
     );
+
+    setTimeout(() => this.scrollToBottom(), 500);
   }
 
-  ngAfterViewChecked() {
-    this.scrollToBottom();
+  ngOnDestroy() {
+    this.subscription.unsubscribe();
+    this.chatService.stopTyping();
   }
 
   sendMessage() {
@@ -128,6 +134,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
         createdAt: new Date(),
       };
       this.messages = [...this.messages, newMessage];
+      setTimeout(() => this.scrollToBottom(true), 0);
 
       this.message = '';
       this.chatService.sendMessage(messageToSend);
@@ -141,11 +148,6 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     } else {
       this.chatService.stopTyping();
     }
-  }
-
-  ngOnDestroy() {
-    this.subscription.unsubscribe();
-    this.chatService.stopTyping();
   }
 
   isMyMessage(message: Message): boolean {
@@ -168,20 +170,20 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     return false;
   }
 
-  private scrollToBottom(): void {
-    if (this.chatBody) {
-      const element = this.chatBody.nativeElement;
-      const shouldAutoScroll =
-        element.scrollHeight - element.scrollTop - element.clientHeight < 100;
+  private scrollToBottom(force: boolean = false): void {
+    if (!this.scrollContainer) {
+      console.warn('Scroll container is not available.');
+      return;
+    }
 
-      if (shouldAutoScroll) {
-        requestAnimationFrame(() => {
-          element.scrollTo({
-            top: element.scrollHeight,
-            behavior: 'smooth',
-          });
-        });
-      }
+    try {
+      const el = this.scrollContainer.nativeElement;
+      el.scrollTo({
+        top: el.scrollHeight,
+        behavior: 'smooth',
+      });
+    } catch (err) {
+      console.error('[ChatComponent] scrollToBottom error:', err);
     }
   }
 }

@@ -31,12 +31,29 @@ export class ChatService {
   constructor(private route: ActivatedRoute, private http: HttpClient) {
     this.route.queryParamMap.subscribe((queryParams) => {
       const chatID = queryParams.get('chatId');
-      this.chatId = chatID;
-      localStorage.setItem('chatID', chatID || 'test');
-      console.log('chatID:', chatID);
-      console.log('token:', queryParams.get('token'));
-      localStorage.setItem('token', queryParams.get('token') || '');
-      localStorage.setItem('userId', queryParams.get('userId') || '');
+      const token = queryParams.get('token');
+      const userId = queryParams.get('userId');
+    
+      if (chatID) {
+        this.chatId = chatID;
+        localStorage.setItem('chatID', chatID);
+      } else {
+        this.chatId = localStorage.getItem('chatID') || 'test';
+      }
+    
+      if (token) {
+        localStorage.setItem('token', token);
+      } else {
+        localStorage.setItem('token', localStorage.getItem('token') || '');
+      }
+    
+      if (userId) {
+        localStorage.setItem('userId', userId);
+      } else {
+        localStorage.setItem('userId', localStorage.getItem('userId') || '');
+      }
+    
+      window.history.replaceState({}, '', window.location.pathname);
     });
 
     this.socket = io('http://localhost:3000', {
