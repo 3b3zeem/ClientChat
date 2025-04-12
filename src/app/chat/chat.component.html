@@ -1,8 +1,8 @@
-<div class="chat-container">
+<!-- <div class="chat-container">
   <div class="chat-window">
     <div class="chat-header">
-      <img src="/logo.png" alt="Logo" />
-      <div style="display: flex; align-items: center; gap: 7px">
+      <img src="/logo.png" alt="Logo" class="chat-logo" />
+      <div class="header-content">
         <fa-icon [icon]="faUser" size="2x"></fa-icon>
         <h2>Chat Support</h2>
       </div>
@@ -29,6 +29,62 @@
         </div>
       </div>
       <div *ngIf="isTyping" class="typing">Typing...</div>
+    </div>
+
+    <div class="chat-input">
+      <input
+        [(ngModel)]="message"
+        (keydown.enter)="sendMessage()"
+        (input)="onTyping()"
+        placeholder="Type your message here..."
+        [disabled]="isLoading"
+      />
+      <button (click)="sendMessage()" [disabled]="!message.trim() || isLoading">
+        <fa-icon [icon]="faSend"></fa-icon>
+      </button>
+    </div>
+  </div>
+</div> -->
+
+<div class="chat-container">
+  <div class="chat-window">
+    <div class="chat-header">
+      <img src="/logo.png" alt="Logo" class="chat-logo" />
+      <div class="header-content">
+        <fa-icon [icon]="faUser" size="lg"></fa-icon>
+        <h2>Chat Support</h2>
+      </div>
+    </div>
+
+    <div #scrollContainer class="chat-body">
+      <div *ngIf="isLoading" class="loading">
+        <div class="spinner"></div>
+        <span>Connecting to support...</span>
+      </div>
+      <div *ngIf="!isLoading" class="messages">
+        <div
+          *ngFor="let msg of messages"
+          class="message-container"
+          [ngClass]="{
+            right: isMyMessage(msg),
+            left: !isMyMessage(msg)
+          }"
+        >
+          <div class="message">
+            <span class="message-text">{{ msg.content }}</span>
+            <div class="timestamp" *ngIf="msg.createdAt">
+              <span>{{ msg.createdAt | date: "h:mm a" }}</span>
+              <span>{{ msg.createdAt | date: "M/d/yy" }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="isTyping" class="typing">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span>Typing...</span>
+      </div>
     </div>
 
     <div class="chat-input">
